@@ -23,20 +23,24 @@ sources:
     limit: 15
 
   # ── YouTube 频道 ────────────────────────────────────
-  # 将 CHANNEL_ID 替换为实际的频道 ID
-  # 频道 ID 可以在频道页面 URL 中找到
+  # handle: YouTube 频道 @ 用户名
+  # channel_id: 频道 ID（可在频道页面 URL 或源代码中找到）
   # - name: YouTube - TechChannel
   #   type: youtube
   #   icon: "▶️"
-  #   url: https://www.youtube.com/feeds/videos.xml?channel_id=CHANNEL_ID
+  #   handle: "@TechChannel"
+  #   channel_id: UCxxxxxxxxxxxxxxxxxxxxxxx
   #   limit: 10
 
   # ── Apple Podcast ───────────────────────────────────
-  # 替换为实际的 Podcast RSS Feed URL
-  # - name: 我的播客
+  # 支持三种方式配置：
+  #   1. apple_podcast_url: Apple Podcast 链接（自动解析 RSS）
+  #   2. apple_podcast_id: Apple Podcast ID（自动解析 RSS）
+  #   3. url: 直接提供 RSS Feed URL
+  # - name: 自习室 STUDY ROOM
   #   type: podcast
   #   icon: "🎙️"
-  #   url: https://feeds.example.com/podcast.xml
+  #   apple_podcast_url: https://podcasts.apple.com/us/podcast/id1726135306
   #   limit: 10
 
   # ── X / Twitter (通过 RSSHub) ───────────────────────

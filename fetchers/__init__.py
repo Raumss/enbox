@@ -11,6 +11,8 @@ from typing import Any
 from fetchers.hackernews import fetch_hackernews
 from fetchers.v2ex import fetch_v2ex
 from fetchers.rss import fetch_rss
+from fetchers.youtube import fetch_youtube
+from fetchers.podcast import fetch_podcast
 from fetchers.twitter import fetch_twitter
 from fetchers.xueqiu import fetch_xueqiu
 
@@ -18,8 +20,8 @@ FETCHER_MAP = {
     "hackernews": fetch_hackernews,
     "v2ex": fetch_v2ex,
     "rss": fetch_rss,
-    "youtube": fetch_rss,       # YouTube channels expose RSS
-    "podcast": fetch_rss,       # Podcasts are RSS-based
+    "youtube": fetch_youtube,
+    "podcast": fetch_podcast,
     "coolshell": fetch_rss,     # CoolShell has an RSS feed
     "twitter": fetch_twitter,
     "xueqiu": fetch_xueqiu,
@@ -37,10 +39,31 @@ async def get_all_feeds(sources: list[dict[str, Any]]) -> list[dict]:
         except Exception as exc:
             traceback.print_exc()
             items = []
+        # Stamp each item with source metadata for frontend grouping
+        src_name = source.get("name", stype)
+        src_icon = source.get("icon", "")
+
+        # For multi-user platforms, ensure author is set on every item
+        # so the frontend can distinguish content from different creators.
+        _MULTI_USER_TYPES = {"youtube", "podcast", "twitter", "xueqiu"}
+        fallback_author = ""
+        if stype in _MULTI_USER_TYPES:
+            fallback_author = src_name
+            # Strip platform prefix if present, e.g. "YouTube - tiabtc" → "tiabtc"
+            if " - " in fallback_author:
+                fallback_author = fallback_author.split(" - ", 1)[1]
+
+        for item in items:
+            item["source_name"] = src_name
+            item["source_type"] = stype
+            item["source_icon"] = src_icon
+            # Populate author from fetcher data or fallback to source name
+            if not item.get("author") and fallback_author:
+                item["author"] = fallback_author
         return {
-            "name": source.get("name", stype),
+            "name": src_name,
             "type": stype,
-            "icon": source.get("icon", ""),
+            "icon": src_icon,
             "items": items,
         }
 

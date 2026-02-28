@@ -15,8 +15,13 @@
     </div>
   </header>
 
+  <div class="view-modes">
+    <button class="view-btn active" data-mode="timeline" title="时间线：所有内容混合排列">🕐 时间线</button>
+    <button class="view-btn" data-mode="platform" title="按平台分类展示">📂 按平台</button>
+  </div>
+
   <nav id="source-tabs" class="tabs">
-    <button class="tab active" data-index="all">全部</button>
+    <!-- Tabs are dynamically generated in platform mode -->
   </nav>
 
   <main id="feed-container" class="feed-container">

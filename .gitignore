@@ -9,3 +9,5 @@ config.yaml
 dist/
 build/
 .DS_Store
+.enbox.pid
+enbox.log

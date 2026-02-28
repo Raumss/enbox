@@ -1,5 +1,10 @@
 /**
  * Enbox – Frontend Application
+ *
+ * Two view modes:
+ *   1. "timeline"  – all items mixed, sorted by time descending
+ *   2. "platform"  – items grouped by platform type (same platform merged),
+ *                    with tabs to filter by platform
  */
 
 (function () {
@@ -12,14 +17,28 @@
   const tabsContainer = $("#source-tabs");
   const loading = $("#loading");
   const refreshBtn = $("#refresh-btn");
+  const viewBtns = $$(".view-btn");
 
-  let allFeeds = []; // cached data
-  let activeTab = "all";
+  let allFeeds = [];       // raw data from API (array of source groups)
+  let viewMode = "timeline"; // "timeline" | "platform"
+  let activeTab = "all";     // used in platform mode
 
   // ─── Bootstrap ──────────────────────────────────────────────
   document.addEventListener("DOMContentLoaded", () => {
     loadFeeds();
     refreshBtn.addEventListener("click", () => loadFeeds());
+
+    // View mode toggle
+    viewBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        viewBtns.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        viewMode = btn.dataset.mode;
+        activeTab = "all";
+        buildTabs();
+        renderFeeds();
+      });
+    });
   });
 
   async function loadFeeds() {
@@ -36,22 +55,81 @@
     }
   }
 
+  // ─── Platform map (type -> display label & icon) ────────────
+  const PLATFORM_LABELS = {
+    hackernews: { label: "Hacker News", icon: "🔶" },
+    v2ex:       { label: "V2EX",        icon: "💬" },
+    rss:        { label: "RSS",         icon: "📰" },
+    youtube:    { label: "YouTube",     icon: "▶️" },
+    podcast:    { label: "Podcast",     icon: "🎙️" },
+    coolshell:  { label: "CoolShell",   icon: "🐚" },
+    twitter:    { label: "X / Twitter", icon: "𝕏" },
+    xueqiu:     { label: "雪球",        icon: "❄️" },
+  };
+
+  // ─── Helper: flatten all items ──────────────────────────────
+  function getAllItems() {
+    const items = [];
+    allFeeds.forEach((source) => {
+      (source.items || []).forEach((item) => items.push(item));
+    });
+    return items;
+  }
+
+  // ─── Helper: group items by platform type ───────────────────
+  function groupByPlatform() {
+    const map = {};
+    allFeeds.forEach((source) => {
+      const ptype = source.type || "rss";
+      if (!map[ptype]) {
+        const info = PLATFORM_LABELS[ptype] || { label: ptype, icon: "📰" };
+        map[ptype] = {
+          type: ptype,
+          label: info.label,
+          icon: source.icon || info.icon,
+          items: [],
+        };
+      }
+      (source.items || []).forEach((item) => map[ptype].items.push(item));
+    });
+    // Sort items within each platform by time descending
+    Object.values(map).forEach((group) => {
+      group.items.sort((a, b) => (b.time || 0) - (a.time || 0));
+    });
+    return map;
+  }
+
   // ─── Tabs ───────────────────────────────────────────────────
   function buildTabs() {
-    // Remove old tabs except "all"
-    tabsContainer.innerHTML = `<button class="tab ${activeTab === "all" ? "active" : ""}" data-index="all">全部</button>`;
-    allFeeds.forEach((source, idx) => {
+    tabsContainer.innerHTML = "";
+
+    if (viewMode === "timeline") {
+      // No tabs in timeline mode
+      tabsContainer.style.display = "none";
+      return;
+    }
+
+    // Platform mode: "全部" + one tab per platform type
+    tabsContainer.style.display = "flex";
+    const allBtn = document.createElement("button");
+    allBtn.className = `tab ${activeTab === "all" ? "active" : ""}`;
+    allBtn.dataset.platform = "all";
+    allBtn.textContent = "全部";
+    tabsContainer.appendChild(allBtn);
+
+    const platforms = groupByPlatform();
+    Object.values(platforms).forEach((p) => {
       const btn = document.createElement("button");
-      btn.className = `tab ${activeTab === String(idx) ? "active" : ""}`;
-      btn.dataset.index = String(idx);
-      btn.textContent = `${source.icon || ""} ${source.name}`.trim();
+      btn.className = `tab ${activeTab === p.type ? "active" : ""}`;
+      btn.dataset.platform = p.type;
+      btn.textContent = `${p.icon || ""} ${p.label}`.trim();
       tabsContainer.appendChild(btn);
     });
-    // Event delegation
+
     tabsContainer.onclick = (e) => {
       const btn = e.target.closest(".tab");
       if (!btn) return;
-      activeTab = btn.dataset.index;
+      activeTab = btn.dataset.platform;
       $$(".tab").forEach((t) => t.classList.remove("active"));
       btn.classList.add("active");
       renderFeeds();
@@ -61,32 +139,60 @@
   // ─── Render ─────────────────────────────────────────────────
   function renderFeeds() {
     feedContainer.innerHTML = "";
+    if (viewMode === "timeline") {
+      renderTimeline();
+    } else {
+      renderPlatform();
+    }
+  }
 
-    const sources = activeTab === "all"
-      ? allFeeds
-      : [allFeeds[parseInt(activeTab, 10)]];
+  // ─── Timeline Mode ─────────────────────────────────────────
+  function renderTimeline() {
+    const items = getAllItems();
+    items.sort((a, b) => (b.time || 0) - (a.time || 0));
 
-    if (!sources.length || sources.every((s) => !s.items.length)) {
+    if (!items.length) {
       feedContainer.innerHTML = `<p class="empty-msg">暂无内容</p>`;
       return;
     }
 
-    sources.forEach((source) => {
-      if (!source || !source.items.length) return;
+    items.forEach((item) => {
+      if (item.display === "post") {
+        feedContainer.appendChild(createPostCard(item, true));
+      } else {
+        feedContainer.appendChild(createArticleCard(item, true));
+      }
+    });
+  }
+
+  // ─── Platform Mode ─────────────────────────────────────────
+  function renderPlatform() {
+    const platforms = groupByPlatform();
+    const entries = activeTab === "all"
+      ? Object.values(platforms)
+      : [platforms[activeTab]].filter(Boolean);
+
+    if (!entries.length || entries.every((p) => !p.items.length)) {
+      feedContainer.innerHTML = `<p class="empty-msg">暂无内容</p>`;
+      return;
+    }
+
+    entries.forEach((platform) => {
+      if (!platform || !platform.items.length) return;
       const section = document.createElement("div");
       section.className = "source-section";
       section.innerHTML = `
         <div class="source-header">
-          <span class="source-icon">${source.icon || "📰"}</span>
-          <span class="source-name">${esc(source.name)}</span>
-          <span class="source-count">${source.items.length} 条</span>
+          <span class="source-icon">${platform.icon || "📰"}</span>
+          <span class="source-name">${esc(platform.label)}</span>
+          <span class="source-count">${platform.items.length} 条</span>
         </div>`;
 
-      source.items.forEach((item) => {
+      platform.items.forEach((item) => {
         if (item.display === "post") {
-          section.appendChild(createPostCard(item));
+          section.appendChild(createPostCard(item, false));
         } else {
-          section.appendChild(createArticleCard(item));
+          section.appendChild(createArticleCard(item, false));
         }
       });
 
@@ -95,11 +201,12 @@
   }
 
   // ─── Article Card ───────────────────────────────────────────
-  function createArticleCard(item) {
+  function createArticleCard(item, showSource) {
     const el = document.createElement("div");
     el.className = "card";
 
     let meta = [];
+    if (showSource && item.source_name) meta.push(`${item.source_icon || "📰"} ${item.source_name}`);
     if (item.author) meta.push(item.author);
     if (item.node) meta.push(item.node);
     if (item.score !== undefined && item.score > 0) meta.push(`▲ ${item.score}`);
@@ -116,16 +223,19 @@
   }
 
   // ─── Post Card (collapsible) ────────────────────────────────
-  function createPostCard(item) {
+  function createPostCard(item, showSource) {
     const el = document.createElement("div");
     el.className = "post-card";
 
     const bodyText = item.summary || item.title || "";
     const needsCollapse = bodyText.length > 140;
+    const sourceTag = showSource && item.source_name
+      ? ` · <span class="post-source">${item.source_icon || "📰"} ${esc(item.source_name)}</span>`
+      : "";
 
     el.innerHTML = `
       <div class="post-header">
-        <span class="post-author">${esc(item.author || "")}</span>
+        <span class="post-author">${esc(item.author || "")}${sourceTag}</span>
         <span class="post-time">${item.time ? relTime(item.time) : ""}</span>
       </div>
       <div class="post-body ${needsCollapse ? "collapsed" : ""}">${esc(bodyText)}</div>
