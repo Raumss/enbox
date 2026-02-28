@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enbox – 信息聚合</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <h1 class="logo">📦 Enbox</h1>
+      <p class="tagline">多平台信息聚合</p>
+      <button id="refresh-btn" class="btn-refresh" title="刷新">↻</button>
+    </div>
+  </header>
+
+  <nav id="source-tabs" class="tabs">
+    <button class="tab active" data-index="all">全部</button>
+  </nav>
+
+  <main id="feed-container" class="feed-container">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <span>正在获取内容…</span>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <span>Enbox · 信息聚合工具</span>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

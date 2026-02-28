@@ -1,0 +1,67 @@
+# Enbox 配置文件
+# 每个 source 定义一个信息源
+
+sources:
+  # ── Hacker News ─────────────────────────────────────
+  - name: Hacker News
+    type: hackernews
+    icon: "🔶"
+    limit: 25
+
+  # ── V2EX ────────────────────────────────────────────
+  - name: V2EX 热门
+    type: v2ex
+    icon: "💬"
+    tab: hot          # hot | latest
+    limit: 20
+
+  # ── CoolShell (陈皓博客) ────────────────────────────
+  - name: CoolShell
+    type: coolshell
+    icon: "🐚"
+    url: https://coolshell.cn/feed
+    limit: 15
+
+  # ── YouTube 频道 ────────────────────────────────────
+  # 将 CHANNEL_ID 替换为实际的频道 ID
+  # 频道 ID 可以在频道页面 URL 中找到
+  # - name: YouTube - TechChannel
+  #   type: youtube
+  #   icon: "▶️"
+  #   url: https://www.youtube.com/feeds/videos.xml?channel_id=CHANNEL_ID
+  #   limit: 10
+
+  # ── Apple Podcast ───────────────────────────────────
+  # 替换为实际的 Podcast RSS Feed URL
+  # - name: 我的播客
+  #   type: podcast
+  #   icon: "🎙️"
+  #   url: https://feeds.example.com/podcast.xml
+  #   limit: 10
+
+  # ── X / Twitter (通过 RSSHub) ───────────────────────
+  # 需要可用的 RSSHub 实例
+  # - name: X - elonmusk
+  #   type: twitter
+  #   icon: "𝕏"
+  #   rsshub_base: https://rsshub.app
+  #   username: elonmusk
+  #   limit: 15
+
+  # ── 雪球 (通过 RSSHub) ─────────────────────────────
+  # user_id 可以在雪球用户主页 URL 中找到
+  # - name: 雪球 - 某用户
+  #   type: xueqiu
+  #   icon: "❄️"
+  #   rsshub_base: https://rsshub.app
+  #   user_id: "1234567890"
+  #   limit: 15
+
+  # ── 通用 RSS ────────────────────────────────────────
+  # 任何标准 RSS/Atom 源都可以用 type: rss 接入
+  # - name: 阮一峰的网络日志
+  #   type: rss
+  #   icon: "📝"
+  #   url: https://www.ruanyifeng.com/blog/atom.xml
+  #   display: article    # article | post
+  #   limit: 15
