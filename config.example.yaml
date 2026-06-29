@@ -43,13 +43,15 @@ sources:
   #   apple_podcast_url: https://podcasts.apple.com/us/podcast/id1726135306
   #   limit: 10
 
-  # ── X / Twitter (通过 RSSHub) ───────────────────────
-  # 需要可用的 RSSHub 实例
+  # ── X / Twitter ─────────────────────────────────────
+  # 无需认证即可使用（返回精选/热门推文）
+  # 配置 auth_token 可获取真正的最新时间线
+  # auth_token 获取方法: 登录 x.com → 开发者工具 → Cookies → auth_token
   # - name: X - elonmusk
   #   type: twitter
   #   icon: "𝕏"
-  #   rsshub_base: https://rsshub.app
   #   username: elonmusk
+  #   auth_token: "your_auth_token_here"   # 可选，提供后获取最新推文
   #   limit: 15
 
   # ── 雪球 (通过 RSSHub) ─────────────────────────────
